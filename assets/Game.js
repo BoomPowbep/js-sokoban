@@ -11,6 +11,8 @@ class Game {
     constructor() {
         console.log('🕹 Starting Game')
 
+        this.win = false
+
         // Elements of the game (struct)
         this._elements = {
             EMPTY: 0,
@@ -49,6 +51,9 @@ class Game {
 
         // Init _canvas
         this._createCanvas()
+
+        // Load audio resources
+        this._loadAudio()
 
         // Load graphical _assets
         this._loadAssets()
@@ -124,6 +129,7 @@ class Game {
                     this._nextMove = 'right'
                     break
                 case 'Escape': // Escape
+                    this._pauseSound.play()
                     break
             }
         })
@@ -172,6 +178,12 @@ class Game {
         this._ctx.fillStyle = '#ffffff'
         this._ctx.fill()
 
+    }
+
+    _loadAudio() {
+        this._winSound = new Sound('sound/win.wav')
+        this._stepSound = new Sound('sound/step.wav')
+        this._pauseSound = new Sound('sound/pause.wav')
     }
 
     /**
@@ -250,7 +262,96 @@ class Game {
         this._ctx.clearRect(0, 0, BLOCK_WIDTH * NB_SIDE_BLOCKS, BLOCK_HEIGHT * NB_SIDE_BLOCKS)
         this._updateControls()
         this._renderFrame()
-        window.requestAnimationFrame(this.run.bind(this))
+        if(!this.win) {
+            window.requestAnimationFrame(this.run.bind(this))
+        }
+        else {
+            console.log('Win!')
+        }
+    }
+
+    _moveUp() {
+        if (this._map[this._playerPos.x - 1][this._playerPos.y] === this._elements.EMPTY) {
+
+            this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
+            this._playerPos.x -= 1
+            this._stepSound.play()
+
+        } else if (this._map[this._playerPos.x - 1][this._playerPos.y] === this._elements.BOX
+            && (this._map[this._playerPos.x - 2][this._playerPos.y] === this._elements.EMPTY
+                || this._map[this._playerPos.x - 2][this._playerPos.y] === this._elements.GOAL)) {
+
+            this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
+            this._map[this._boxPos.x][this._boxPos.y] = this._elements.EMPTY
+            this._playerPos.x -= 1
+            this._boxPos.x -= 1
+            this._stepSound.play()
+        }
+
+        this._map[this._playerPos.x][this._playerPos.y] = this._elements.PLAYER_UP
+    }
+
+    _moveDown() {
+        if (this._map[this._playerPos.x + 1][this._playerPos.y] === this._elements.EMPTY) {
+
+            this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
+            this._playerPos.x += 1
+            this._stepSound.play()
+
+        } else if (this._map[this._playerPos.x + 1][this._playerPos.y] === this._elements.BOX
+            && (this._map[this._playerPos.x + 2][this._playerPos.y] === this._elements.EMPTY
+                || this._map[this._playerPos.x + 2][this._playerPos.y] === this._elements.GOAL)) {
+
+            this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
+            this._map[this._boxPos.x][this._boxPos.y] = this._elements.EMPTY
+            this._playerPos.x += 1
+            this._boxPos.x += 1
+            this._stepSound.play()
+        }
+
+        this._map[this._playerPos.x][this._playerPos.y] = this._elements.PLAYER_DOWN
+    }
+
+    _moveLeft() {
+        if (this._map[this._playerPos.x][this._playerPos.y - 1] === this._elements.EMPTY) {
+
+            this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
+            this._playerPos.y -= 1
+            this._stepSound.play()
+
+        } else if (this._map[this._playerPos.x][this._playerPos.y - 1] === this._elements.BOX
+            && (this._map[this._playerPos.x][this._playerPos.y - 2] === this._elements.EMPTY
+                || this._map[this._playerPos.x][this._playerPos.y - 2] === this._elements.GOAL)) {
+
+            this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
+            this._map[this._boxPos.x][this._boxPos.y] = this._elements.EMPTY
+            this._playerPos.y -= 1
+            this._boxPos.y -= 1
+            this._stepSound.play()
+        }
+
+        this._map[this._playerPos.x][this._playerPos.y] = this._elements.PLAYER_LEFT
+    }
+
+    _moveRight() {
+        if (this._map[this._playerPos.x][this._playerPos.y + 1] === this._elements.EMPTY) {
+
+            this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
+            this._playerPos.y += 1
+            this._stepSound.play()
+
+        } else if (this._map[this._playerPos.x][this._playerPos.y + 1] === this._elements.BOX
+            && (this._map[this._playerPos.x][this._playerPos.y + 2] === this._elements.EMPTY
+                || this._map[this._playerPos.x][this._playerPos.y + 2] === this._elements.GOAL)) {
+
+            this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
+            this._map[this._boxPos.x][this._boxPos.y] = this._elements.EMPTY
+            this._playerPos.y += 1
+            this._boxPos.y += 1
+            this._stepSound.play()
+        }
+
+        this._map[this._playerPos.x][this._playerPos.y] = this._elements.PLAYER_RIGHT
     }
 
     /**
@@ -261,52 +362,23 @@ class Game {
         if (this._nextMove !== '') {
             switch (this._nextMove) {
                 case 'up':
-                    if (this._map[this._playerPos.x - 1][this._playerPos.y] === this._elements.EMPTY) {
-                        this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
-                        this._playerPos.x -= 1
-                    } else if (this._map[this._playerPos.x - 1][this._playerPos.y] === this._elements.BOX
-                        && this._map[this._playerPos.x - 2][this._playerPos.y] === this._elements.EMPTY) {
-                        this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
-                        this._map[this._boxPos.x][this._boxPos.y] = this._elements.EMPTY
-                        this._playerPos.x -= 1
-                        this._boxPos.x -= 1
-                    }
-                    this._map[this._playerPos.x][this._playerPos.y] = this._elements.PLAYER_UP
+                    this._moveUp()
                     break;
                 case 'down':
-                    if (this._map[this._playerPos.x + 1][this._playerPos.y] === this._elements.EMPTY) {
-                        this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
-                        this._playerPos.x += 1
-                    }
-                    this._map[this._playerPos.x][this._playerPos.y] = this._elements.PLAYER_DOWN
+                    this._moveDown()
                     break;
                 case 'left':
-                    if (this._map[this._playerPos.x][this._playerPos.y - 1] === this._elements.EMPTY) {
-                        this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
-                        this._playerPos.y -= 1
-                    }
-                    this._map[this._playerPos.x][this._playerPos.y] = this._elements.PLAYER_LEFT
+                    this._moveLeft()
                     break;
                 case 'right':
-                    this._map[this._playerPos.x][this._playerPos.y] = this._elements.PLAYER_RIGHT
-                    if (this._map[this._playerPos.x][this._playerPos.y + 1] === this._elements.EMPTY) {
-                        this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
-                        this._playerPos.y += 1
-                    } else if (this._map[this._playerPos.x][this._playerPos.y + 1] === this._elements.BOX
-                        && ( this._map[this._playerPos.x][this._playerPos.y + 2] === this._elements.EMPTY
-                            || this._map[this._playerPos.x][this._playerPos.y + 2] === this._elements.GOAL )) {
-                        this._map[this._playerPos.x][this._playerPos.y] = this._elements.EMPTY
-                        this._map[this._boxPos.x][this._boxPos.y] = this._elements.EMPTY
-                        this._playerPos.y += 1
-                        this._boxPos.y += 1
-                    }
-                        this._map[this._playerPos.x][this._playerPos.y] = this._elements.PLAYER_RIGHT
+                    this._moveRight()
                     break;
             }
-            if(this._boxPos.x === this._goalPos.x && this._boxPos.y === this._goalPos.y) { // win
+            if (this._boxPos.x === this._goalPos.x && this._boxPos.y === this._goalPos.y) { // win
                 this._map[this._boxPos.x][this._boxPos.y] = this._elements.BOX_OK
-            }
-            else {
+                this._winSound.play()
+                this.win = true
+            } else {
                 this._map[this._boxPos.x][this._boxPos.y] = this._elements.BOX
             }
             this._nextMove = ''
