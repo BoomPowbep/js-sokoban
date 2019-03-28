@@ -181,6 +181,7 @@ class Game {
     }
 
     _loadAudio() {
+        this.soundtrack = new Sound('sound/soundtrack.mp3', true)
         this._winSound = new Sound('sound/win.wav')
         this._stepSound = new Sound('sound/step.wav')
         this._pauseSound = new Sound('sound/pause.wav')
@@ -260,14 +261,13 @@ class Game {
      */
     run() {
         this._ctx.clearRect(0, 0, BLOCK_WIDTH * NB_SIDE_BLOCKS, BLOCK_HEIGHT * NB_SIDE_BLOCKS)
-        this._updateControls()
-        this._renderFrame()
+
         if(!this.win) {
-            window.requestAnimationFrame(this.run.bind(this))
+            this._updateControls()
         }
-        else {
-            console.log('Win!')
-        }
+
+        this._renderFrame()
+        window.requestAnimationFrame(this.run.bind(this))
     }
 
     _moveUp() {
